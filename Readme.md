@@ -1,9 +1,5 @@
 # Prompt
 
-**Deprecated:** use https://github.com/Bowery/prompt instead.
-
----
-
 [![Go Reference](https://pkg.go.dev/badge/github.com/matthewmueller/prompt.svg)](https://pkg.go.dev/github.com/matthewmueller/prompt)
 
 Minimal prompting library for Go.
