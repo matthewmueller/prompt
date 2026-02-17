@@ -10,7 +10,7 @@ Minimal prompting library for Go.
 
 ## Features
 
-- Fluent API
+- Functional options API
 - Supports inputs, passwords and confirmations
 - Supports validations, defaults and optionals
 - Supports context canceling
@@ -24,16 +24,16 @@ go get github.com/matthewmueller/prompter
 ## Examples
 
 ```go
-prompt := prompter.Default()
+ctx := context.Background()
 
 // Ask for some input
-name, err := prompt.Ask("What is your name?")
+name, err := prompter.Ask(ctx, "What is your name?")
 
 // Optional inputs
-age, err := prompt.Optional(true).Ask("What is your age?")
+age, err := prompter.Ask(ctx, "What is your age?", prompter.WithOptional(true))
 
 // Default values
-age, err = prompt.Default("21").Ask("What is your age?")
+age, err = prompter.Ask(ctx, "What is your age?", prompter.WithDefault("21"))
 
 // Validations
 func validPass(input string) error {
@@ -43,12 +43,12 @@ func validPass(input string) error {
 }
 
 // Passwords
-pass, err := prompt.Is(validPass).Password("What is your password?")
+pass, err := prompter.Password(ctx, "What is your password?", prompter.WithCheck(validPass))
 
 // Confirmations
-shouldCreate, err := prompt.Confirm("Create new user? (yes/no)")
+shouldCreate, err := prompter.Confirm(ctx, "Create new user? (yes/no)")
 
-// Chaining
+// Multiple options
 func validAge(input string) error {
   n, err := strconv.Atoi(input)
   if err != nil {
@@ -58,7 +58,13 @@ func validAge(input string) error {
   }
   return nil
 }
-age, err := prompt.Default("21").Is(validAge).Ask("What is your age?")
+age, err := prompter.Ask(ctx, "What is your age?", prompter.WithDefault("21"), prompter.WithCheck(validAge))
+
+// Custom IO (optional)
+age, err = prompter.Ask(ctx, "What is your age?",
+  prompter.WithReader(reader),
+  prompter.WithWriter(writer),
+)
 ```
 
 ## Development
