@@ -8,7 +8,7 @@ Minimal prompting library for Go.
 
 - Functional options API
 - Supports inputs, passwords and confirmations
-- Supports validations, defaults and optionals
+- Supports defaults, optionals and checks.
 - Supports context canceling
 
 ## Install
@@ -31,7 +31,7 @@ age, err := prompt.Ask(ctx, "What is your age?", prompt.WithOptional(true))
 // Default values
 age, err = prompt.Ask(ctx, "What is your age?", prompt.WithDefault("21"))
 
-// Validations
+// Checks
 func validPass(input string) error {
   if len(input) < 8 {
     return errors.New("password is too short")
@@ -58,7 +58,7 @@ age, err := prompt.Ask(ctx, "What is your age?", prompt.WithDefault("21"), promp
 
 // Custom IO (optional)
 age, err = prompt.Ask(ctx, "What is your age?",
-  prompt.WithReader(reader),
+  prompt.WithReader(bytes.NewBuffer("36")),
   prompt.WithWriter(writer),
 )
 ```
