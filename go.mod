@@ -1,4 +1,4 @@
-module github.com/matthewmueller/prompter
+module github.com/matthewmueller/prompt
 
 go 1.23.0
 

@@ -1,4 +1,4 @@
-package prompter_test
+package prompt_test
 
 import (
 	"bytes"
@@ -10,24 +10,24 @@ import (
 
 	"github.com/matryer/is"
 	"github.com/matthewmueller/diff"
-	"github.com/matthewmueller/prompter"
+	"github.com/matthewmueller/prompt"
 )
 
 func TestAsk(t *testing.T) {
 	is := is.New(t)
 	ctx := context.Background()
 	reader := bytes.NewBufferString("Mark\n27\n")
-	withReader := prompter.WithReader(reader)
-	withWriter := prompter.WithWriter(io.Discard)
+	withReader := prompt.WithReader(reader)
+	withWriter := prompt.WithWriter(io.Discard)
 
-	name, err := prompter.Ask(ctx, "What is your name?",
+	name, err := prompt.Ask(ctx, "What is your name?",
 		withReader,
 		withWriter,
 	)
 	is.NoErr(err)
 	is.Equal(name, "Mark")
 
-	age, err := prompter.Ask(ctx, "What is your age?",
+	age, err := prompt.Ask(ctx, "What is your age?",
 		withReader,
 		withWriter,
 	)
@@ -41,9 +41,9 @@ func TestAskWithoutPromptInitialization(t *testing.T) {
 	writer := new(bytes.Buffer)
 	reader := bytes.NewBufferString("Mark\n")
 
-	name, err := prompter.Ask(ctx, "What is your name?",
-		prompter.WithWriter(writer),
-		prompter.WithReader(reader),
+	name, err := prompt.Ask(ctx, "What is your name?",
+		prompt.WithWriter(writer),
+		prompt.WithReader(reader),
 	)
 	is.NoErr(err)
 	is.Equal(name, "Mark")
@@ -54,16 +54,16 @@ func TestAskWithReaderOptionIsPerCall(t *testing.T) {
 	is := is.New(t)
 	ctx := context.Background()
 
-	overridden, err := prompter.Ask(ctx, "Override name?",
-		prompter.WithReader(bytes.NewBufferString("Amy\n")),
-		prompter.WithWriter(io.Discard),
+	overridden, err := prompt.Ask(ctx, "Override name?",
+		prompt.WithReader(bytes.NewBufferString("Amy\n")),
+		prompt.WithWriter(io.Discard),
 	)
 	is.NoErr(err)
 	is.Equal(overridden, "Amy")
 
-	name, err := prompter.Ask(ctx, "What is your name?",
-		prompter.WithReader(bytes.NewBufferString("Mark\n")),
-		prompter.WithWriter(io.Discard),
+	name, err := prompt.Ask(ctx, "What is your name?",
+		prompt.WithReader(bytes.NewBufferString("Mark\n")),
+		prompt.WithWriter(io.Discard),
 	)
 	is.NoErr(err)
 	is.Equal(name, "Mark")
@@ -73,28 +73,28 @@ func TestAskErrRequired(t *testing.T) {
 	is := is.New(t)
 	ctx := context.Background()
 	reader := bytes.NewBufferString("Mark\n27\n")
-	withReader := prompter.WithReader(reader)
-	withWriter := prompter.WithWriter(io.Discard)
+	withReader := prompt.WithReader(reader)
+	withWriter := prompt.WithWriter(io.Discard)
 
-	name, err := prompter.Ask(ctx, "What is your name?",
+	name, err := prompt.Ask(ctx, "What is your name?",
 		withReader,
 		withWriter,
 	)
 	is.NoErr(err)
 	is.Equal(name, "Mark")
 
-	age, err := prompter.Ask(ctx, "What is your age?",
+	age, err := prompt.Ask(ctx, "What is your age?",
 		withReader,
 		withWriter,
 	)
 	is.NoErr(err)
 	is.Equal(age, "27")
 
-	height, err := prompter.Ask(ctx, "What is your height?",
+	height, err := prompt.Ask(ctx, "What is your height?",
 		withReader,
 		withWriter,
 	)
-	is.True(errors.Is(err, prompter.ErrRequired))
+	is.True(errors.Is(err, prompt.ErrRequired))
 	is.Equal(height, "")
 }
 
@@ -102,18 +102,18 @@ func TestAskOptional(t *testing.T) {
 	is := is.New(t)
 	ctx := context.Background()
 	reader := bytes.NewBufferString("Mark\n")
-	withReader := prompter.WithReader(reader)
-	withWriter := prompter.WithWriter(io.Discard)
+	withReader := prompt.WithReader(reader)
+	withWriter := prompt.WithWriter(io.Discard)
 
-	name, err := prompter.Ask(ctx, "What is your name?",
+	name, err := prompt.Ask(ctx, "What is your name?",
 		withReader,
 		withWriter,
 	)
 	is.NoErr(err)
 	is.Equal(name, "Mark")
 
-	age, err := prompter.Ask(ctx, "What is your age?",
-		prompter.WithOptional(true),
+	age, err := prompt.Ask(ctx, "What is your age?",
+		prompt.WithOptional(true),
 		withReader,
 		withWriter,
 	)
@@ -125,18 +125,18 @@ func TestAskDefault(t *testing.T) {
 	is := is.New(t)
 	ctx := context.Background()
 	reader := bytes.NewBufferString("Mark\n")
-	withReader := prompter.WithReader(reader)
-	withWriter := prompter.WithWriter(io.Discard)
+	withReader := prompt.WithReader(reader)
+	withWriter := prompt.WithWriter(io.Discard)
 
-	name, err := prompter.Ask(ctx, "What is your name?",
+	name, err := prompt.Ask(ctx, "What is your name?",
 		withReader,
 		withWriter,
 	)
 	is.NoErr(err)
 	is.Equal(name, "Mark")
 
-	age, err := prompter.Ask(ctx, "What is your age?",
-		prompter.WithDefault("21"),
+	age, err := prompt.Ask(ctx, "What is your age?",
+		prompt.WithDefault("21"),
 		withReader,
 		withWriter,
 	)
@@ -156,10 +156,10 @@ func TestAskValidate(t *testing.T) {
 		return nil
 	}
 
-	name, err := prompter.Ask(ctx, "What is your name?",
-		prompter.WithCheck(validName),
-		prompter.WithWriter(writer),
-		prompter.WithReader(reader),
+	name, err := prompt.Ask(ctx, "What is your name?",
+		prompt.WithCheck(validName),
+		prompt.WithWriter(writer),
+		prompt.WithReader(reader),
 	)
 	is.NoErr(err)
 	is.Equal(name, "Amy")
@@ -170,18 +170,18 @@ func TestAskDefaultGiven(t *testing.T) {
 	is := is.New(t)
 	ctx := context.Background()
 	reader := bytes.NewBufferString("Mark\n27\n")
-	withReader := prompter.WithReader(reader)
-	withWriter := prompter.WithWriter(io.Discard)
+	withReader := prompt.WithReader(reader)
+	withWriter := prompt.WithWriter(io.Discard)
 
-	name, err := prompter.Ask(ctx, "What is your name?",
+	name, err := prompt.Ask(ctx, "What is your name?",
 		withReader,
 		withWriter,
 	)
 	is.NoErr(err)
 	is.Equal(name, "Mark")
 
-	age, err := prompter.Ask(ctx, "What is your age?",
-		prompter.WithDefault("21"),
+	age, err := prompt.Ask(ctx, "What is your age?",
+		prompt.WithDefault("21"),
 		withReader,
 		withWriter,
 	)
@@ -193,19 +193,19 @@ func TestAskDefaultOptional(t *testing.T) {
 	is := is.New(t)
 	ctx := context.Background()
 	reader := bytes.NewBufferString("Mark\n")
-	withReader := prompter.WithReader(reader)
-	withWriter := prompter.WithWriter(io.Discard)
+	withReader := prompt.WithReader(reader)
+	withWriter := prompt.WithWriter(io.Discard)
 
-	name, err := prompter.Ask(ctx, "What is your name?",
+	name, err := prompt.Ask(ctx, "What is your name?",
 		withReader,
 		withWriter,
 	)
 	is.NoErr(err)
 	is.Equal(name, "Mark")
 
-	age, err := prompter.Ask(ctx, "What is your age?",
-		prompter.WithOptional(true),
-		prompter.WithDefault("21"),
+	age, err := prompt.Ask(ctx, "What is your age?",
+		prompt.WithOptional(true),
+		prompt.WithDefault("21"),
 		withReader,
 		withWriter,
 	)
@@ -217,19 +217,19 @@ func TestAskDefaultOptionalGiven(t *testing.T) {
 	is := is.New(t)
 	ctx := context.Background()
 	reader := bytes.NewBufferString("Mark\n27\n")
-	withReader := prompter.WithReader(reader)
-	withWriter := prompter.WithWriter(io.Discard)
+	withReader := prompt.WithReader(reader)
+	withWriter := prompt.WithWriter(io.Discard)
 
-	name, err := prompter.Ask(ctx, "What is your name?",
+	name, err := prompt.Ask(ctx, "What is your name?",
 		withReader,
 		withWriter,
 	)
 	is.NoErr(err)
 	is.Equal(name, "Mark")
 
-	age, err := prompter.Ask(ctx, "What is your age?",
-		prompter.WithOptional(true),
-		prompter.WithDefault("21"),
+	age, err := prompt.Ask(ctx, "What is your age?",
+		prompt.WithOptional(true),
+		prompt.WithDefault("21"),
 		withReader,
 		withWriter,
 	)
@@ -242,9 +242,9 @@ func TestPassword(t *testing.T) {
 	ctx := context.Background()
 	reader := bytes.NewBufferString("some password\n")
 
-	pass, err := prompter.Password(ctx, "What is your password?",
-		prompter.WithReader(reader),
-		prompter.WithWriter(io.Discard),
+	pass, err := prompt.Password(ctx, "What is your password?",
+		prompt.WithReader(reader),
+		prompt.WithWriter(io.Discard),
 	)
 	is.NoErr(err)
 	is.Equal(pass, "some password")
@@ -255,10 +255,10 @@ func TestPasswordDefault(t *testing.T) {
 	ctx := context.Background()
 	reader := bytes.NewBufferString("")
 
-	pass, err := prompter.Password(ctx, "What is your password?",
-		prompter.WithDefault("idk"),
-		prompter.WithReader(reader),
-		prompter.WithWriter(io.Discard),
+	pass, err := prompt.Password(ctx, "What is your password?",
+		prompt.WithDefault("idk"),
+		prompt.WithReader(reader),
+		prompt.WithWriter(io.Discard),
 	)
 	is.NoErr(err)
 	is.Equal(pass, "idk")
@@ -269,10 +269,10 @@ func TestPasswordOptional(t *testing.T) {
 	ctx := context.Background()
 	reader := bytes.NewBufferString("")
 
-	pass, err := prompter.Password(ctx, "What is your password?",
-		prompter.WithOptional(true),
-		prompter.WithReader(reader),
-		prompter.WithWriter(io.Discard),
+	pass, err := prompt.Password(ctx, "What is your password?",
+		prompt.WithOptional(true),
+		prompt.WithReader(reader),
+		prompt.WithWriter(io.Discard),
 	)
 	is.NoErr(err)
 	is.Equal(pass, "")
@@ -289,10 +289,10 @@ func TestPasswordValidate(t *testing.T) {
 		return nil
 	}
 
-	pass, err := prompter.Password(ctx, "What is your password?",
-		prompter.WithCheck(validate),
-		prompter.WithReader(reader),
-		prompter.WithWriter(io.Discard),
+	pass, err := prompt.Password(ctx, "What is your password?",
+		prompt.WithCheck(validate),
+		prompt.WithReader(reader),
+		prompt.WithWriter(io.Discard),
 	)
 	is.NoErr(err)
 	is.Equal(pass, "some password")
@@ -303,9 +303,9 @@ func TestConfirmTrue(t *testing.T) {
 	ctx := context.Background()
 	reader := bytes.NewBufferString("hello\nyes\n")
 
-	create, err := prompter.Confirm(ctx, "Create new user? (yes/no)",
-		prompter.WithReader(reader),
-		prompter.WithWriter(io.Discard),
+	create, err := prompt.Confirm(ctx, "Create new user? (yes/no)",
+		prompt.WithReader(reader),
+		prompt.WithWriter(io.Discard),
 	)
 	is.NoErr(err)
 	is.Equal(create, true)
@@ -316,9 +316,9 @@ func TestConfirmFalse(t *testing.T) {
 	ctx := context.Background()
 	reader := bytes.NewBufferString("hello\nno\n")
 
-	create, err := prompter.Confirm(ctx, "Create new user? (yes/no)",
-		prompter.WithReader(reader),
-		prompter.WithWriter(io.Discard),
+	create, err := prompt.Confirm(ctx, "Create new user? (yes/no)",
+		prompt.WithReader(reader),
+		prompt.WithWriter(io.Discard),
 	)
 	is.NoErr(err)
 	is.Equal(create, false)
@@ -331,9 +331,9 @@ func TestAskCancel(t *testing.T) {
 	reader := bytes.NewBufferString("Mark\n")
 	cancel() // Cancel the context before asking
 
-	name, err := prompter.Ask(ctx, "What is your name?",
-		prompter.WithReader(reader),
-		prompter.WithWriter(io.Discard),
+	name, err := prompt.Ask(ctx, "What is your name?",
+		prompt.WithReader(reader),
+		prompt.WithWriter(io.Discard),
 	)
 	is.True(errors.Is(err, context.Canceled))
 	is.Equal(name, "")
@@ -346,9 +346,9 @@ func TestPasswordCancel(t *testing.T) {
 	reader := bytes.NewBufferString("some password\n")
 	cancel() // Cancel the context before asking
 
-	_, err := prompter.Password(ctx, "What is your password?",
-		prompter.WithReader(reader),
-		prompter.WithWriter(io.Discard),
+	_, err := prompt.Password(ctx, "What is your password?",
+		prompt.WithReader(reader),
+		prompt.WithWriter(io.Discard),
 	)
 	is.True(errors.Is(err, context.Canceled))
 }
@@ -360,9 +360,9 @@ func TestConfirmCancel(t *testing.T) {
 	reader := bytes.NewBufferString("yes\n")
 	cancel() // Cancel the context before asking
 
-	_, err := prompter.Confirm(ctx, "Create new user? (yes/no)",
-		prompter.WithReader(reader),
-		prompter.WithWriter(io.Discard),
+	_, err := prompt.Confirm(ctx, "Create new user? (yes/no)",
+		prompt.WithReader(reader),
+		prompt.WithWriter(io.Discard),
 	)
 	is.True(errors.Is(err, context.Canceled))
 }

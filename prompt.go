@@ -1,4 +1,4 @@
-package prompter
+package prompt
 
 import (
 	"bufio"
@@ -14,10 +14,10 @@ import (
 )
 
 // ErrRequired is returned when a required input is empty
-var ErrRequired = fmt.Errorf("prompter: input is required")
+var ErrRequired = fmt.Errorf("prompt: input is required")
 
 // ErrInterrupted is returned when a terminal prompt is interrupted (Ctrl+C).
-var ErrInterrupted = fmt.Errorf("prompter: interrupted")
+var ErrInterrupted = fmt.Errorf("prompt: interrupted")
 
 type fd interface {
 	Fd() uintptr

@@ -1,8 +1,8 @@
-package prompter
+package prompt
 
 import (
-	"bytes"
 	"bufio"
+	"bytes"
 	"errors"
 	"strings"
 	"testing"

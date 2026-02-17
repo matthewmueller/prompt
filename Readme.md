@@ -1,10 +1,10 @@
-# Prompter
+# Prompt
 
 **Deprecated:** use https://github.com/Bowery/prompt instead.
 
 ---
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/matthewmueller/prompter.svg)](https://pkg.go.dev/github.com/matthewmueller/prompter)
+[![Go Reference](https://pkg.go.dev/badge/github.com/matthewmueller/prompt.svg)](https://pkg.go.dev/github.com/matthewmueller/prompt)
 
 Minimal prompting library for Go.
 
@@ -18,7 +18,7 @@ Minimal prompting library for Go.
 ## Install
 
 ```sh
-go get github.com/matthewmueller/prompter
+go get github.com/matthewmueller/prompt
 ```
 
 ## Examples
@@ -27,13 +27,13 @@ go get github.com/matthewmueller/prompter
 ctx := context.Background()
 
 // Ask for some input
-name, err := prompter.Ask(ctx, "What is your name?")
+name, err := prompt.Ask(ctx, "What is your name?")
 
 // Optional inputs
-age, err := prompter.Ask(ctx, "What is your age?", prompter.WithOptional(true))
+age, err := prompt.Ask(ctx, "What is your age?", prompt.WithOptional(true))
 
 // Default values
-age, err = prompter.Ask(ctx, "What is your age?", prompter.WithDefault("21"))
+age, err = prompt.Ask(ctx, "What is your age?", prompt.WithDefault("21"))
 
 // Validations
 func validPass(input string) error {
@@ -43,10 +43,10 @@ func validPass(input string) error {
 }
 
 // Passwords
-pass, err := prompter.Password(ctx, "What is your password?", prompter.WithCheck(validPass))
+pass, err := prompt.Password(ctx, "What is your password?", prompt.WithCheck(validPass))
 
 // Confirmations
-shouldCreate, err := prompter.Confirm(ctx, "Create new user? (yes/no)")
+shouldCreate, err := prompt.Confirm(ctx, "Create new user? (yes/no)")
 
 // Multiple options
 func validAge(input string) error {
@@ -58,12 +58,12 @@ func validAge(input string) error {
   }
   return nil
 }
-age, err := prompter.Ask(ctx, "What is your age?", prompter.WithDefault("21"), prompter.WithCheck(validAge))
+age, err := prompt.Ask(ctx, "What is your age?", prompt.WithDefault("21"), prompt.WithCheck(validAge))
 
 // Custom IO (optional)
-age, err = prompter.Ask(ctx, "What is your age?",
-  prompter.WithReader(reader),
-  prompter.WithWriter(writer),
+age, err = prompt.Ask(ctx, "What is your age?",
+  prompt.WithReader(reader),
+  prompt.WithWriter(writer),
 )
 ```
 
@@ -72,8 +72,8 @@ age, err = prompter.Ask(ctx, "What is your age?",
 First, clone the repo:
 
 ```sh
-git clone https://github.com/matthewmueller/prompter
-cd prompter
+git clone https://github.com/matthewmueller/prompt
+cd prompt
 ```
 
 Next, install dependencies:
