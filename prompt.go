@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 
 	"golang.org/x/term"
 )
@@ -153,7 +154,7 @@ func (q *prompt) scanLine(inputCh chan<- string, errorCh chan<- error) {
 	inputCh <- input
 }
 
-func (q *prompt) readTerminalLine() (string, error) {
+func (q *prompt) readTerminalLine(inputOffset int) (string, error) {
 	state, err := term.MakeRaw(q.fd)
 	if err != nil {
 		return "", err
@@ -173,6 +174,7 @@ func (q *prompt) readTerminalLine() (string, error) {
 		}
 
 		oldCursor := cursor
+		oldLen := len(line)
 		switch b {
 		case '\r', '\n':
 			fmt.Fprint(q.writer, "\r\n")
@@ -233,7 +235,7 @@ func (q *prompt) readTerminalLine() (string, error) {
 			cursor++
 		}
 
-		redrawTerminalLine(q.writer, line, oldCursor, cursor)
+		redrawTerminalLine(q.writer, line, oldLen, oldCursor, cursor, inputOffset, getTerminalWidth(q.fd))
 	}
 }
 
@@ -255,7 +257,34 @@ func (q *prompt) eofValue(input string) (string, error) {
 	return "", nil
 }
 
-func redrawTerminalLine(w io.Writer, line []rune, oldCursor, cursor int) {
+func getTerminalWidth(fd int) int {
+	if fd < 0 {
+		return 0
+	}
+	width, _, err := term.GetSize(fd)
+	if err != nil {
+		return 0
+	}
+	return width
+}
+
+func redrawTerminalLine(w io.Writer, line []rune, oldLen, oldCursor, cursor, inputOffset, terminalWidth int) {
+	if terminalWidth <= 0 {
+		redrawTerminalLineLegacy(w, line, oldCursor, cursor)
+		return
+	}
+	inputCol := inputOffset % terminalWidth
+	moveVisualCursor(w, inputCol, terminalWidth, oldCursor, 0)
+	fmt.Fprint(w, string(line))
+	printedLen := len(line)
+	if oldLen > len(line) {
+		fmt.Fprint(w, strings.Repeat(" ", oldLen-len(line)))
+		printedLen = oldLen
+	}
+	moveRenderedCursorToLogical(w, inputCol, terminalWidth, printedLen, cursor)
+}
+
+func redrawTerminalLineLegacy(w io.Writer, line []rune, oldCursor, cursor int) {
 	if oldCursor > 0 {
 		fmt.Fprintf(w, "\x1b[%dD", oldCursor)
 	}
@@ -264,6 +293,50 @@ func redrawTerminalLine(w io.Writer, line []rune, oldCursor, cursor int) {
 	if back := len(line) - cursor; back > 0 {
 		fmt.Fprintf(w, "\x1b[%dD", back)
 	}
+}
+
+func moveVisualCursor(w io.Writer, inputCol, width, fromIndex, toIndex int) {
+	if fromIndex == toIndex {
+		return
+	}
+	fromRow, _ := visualPosition(inputCol, fromIndex, width)
+	toRow, toCol := visualPosition(inputCol, toIndex, width)
+	moveCursor(w, fromRow, toRow, toCol)
+}
+
+func moveRenderedCursorToLogical(w io.Writer, inputCol, width, renderedIndex, logicalIndex int) {
+	fromRow, _ := renderedPosition(inputCol, renderedIndex, width)
+	toRow, toCol := visualPosition(inputCol, logicalIndex, width)
+	moveCursor(w, fromRow, toRow, toCol)
+}
+
+func moveCursor(w io.Writer, fromRow, toRow, toCol int) {
+	switch {
+	case fromRow > toRow:
+		fmt.Fprintf(w, "\x1b[%dA", fromRow-toRow)
+	case fromRow < toRow:
+		fmt.Fprintf(w, "\x1b[%dB", toRow-fromRow)
+	}
+	fmt.Fprint(w, "\r")
+	if toCol > 0 {
+		fmt.Fprintf(w, "\x1b[%dC", toCol)
+	}
+}
+
+func visualPosition(inputCol, index, width int) (int, int) {
+	absolute := inputCol + index
+	return absolute / width, absolute % width
+}
+
+func renderedPosition(inputCol, index, width int) (int, int) {
+	absolute := inputCol + index
+	row := absolute / width
+	col := absolute % width
+	if index > 0 && col == 0 {
+		row--
+		col = width - 1
+	}
+	return row, col
 }
 
 func readEscapeSequence(r *bufio.Reader) (string, error) {
@@ -371,7 +444,7 @@ func (q *prompt) scanPassword(inputCh chan<- string, errorCh chan<- error) {
 }
 
 // Reads the input from the reader.
-func (q *prompt) readInput(ctx context.Context) (string, error) {
+func (q *prompt) readInput(ctx context.Context, inputOffset int) (string, error) {
 	// Check if the context has already been cancelled.
 	if ctx.Err() != nil {
 		return "", ctx.Err()
@@ -379,7 +452,7 @@ func (q *prompt) readInput(ctx context.Context) (string, error) {
 
 	// Terminal input is handled synchronously to guarantee raw mode cleanup.
 	if q.isTerminal() {
-		return q.readTerminalLine()
+		return q.readTerminalLine(inputOffset)
 	}
 
 	inputCh := make(chan string)
@@ -443,10 +516,11 @@ func (q *prompt) readPassword(ctx context.Context) (string, error) {
 func (q *prompt) Ask(ctx context.Context, prompt string) (string, error) {
 	// Write out the formatted prompt.
 retry:
-	fmt.Fprint(q.writer, prompt, " ")
+	promptText := prompt + " "
+	fmt.Fprint(q.writer, promptText)
 
 	// Read the input.
-	input, err := q.readInput(ctx)
+	input, err := q.readInput(ctx, utf8.RuneCountInString(promptText))
 	if err != nil {
 		return "", err
 	}

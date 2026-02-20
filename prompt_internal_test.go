@@ -138,3 +138,68 @@ func TestHandleInterrupt(t *testing.T) {
 	is.True(errors.Is(err, ErrInterrupted))
 	is.Equal(writer.String(), "^C\r\n")
 }
+
+func TestMoveVisualCursorWrappedUp(t *testing.T) {
+	is := is.New(t)
+	writer := new(bytes.Buffer)
+
+	moveVisualCursor(writer, 2, 4, 5, 0)
+
+	is.Equal(writer.String(), "\x1b[1A\r\x1b[2C")
+}
+
+func TestMoveVisualCursorWrappedDown(t *testing.T) {
+	is := is.New(t)
+	writer := new(bytes.Buffer)
+
+	moveVisualCursor(writer, 2, 4, 0, 5)
+
+	is.Equal(writer.String(), "\x1b[1B\r\x1b[3C")
+}
+
+func TestRedrawTerminalLineWrappedDelete(t *testing.T) {
+	is := is.New(t)
+	writer := new(bytes.Buffer)
+
+	redrawTerminalLine(writer, []rune("abcde"), 7, 7, 5, 2, 4)
+
+	is.Equal(writer.String(), "\x1b[2A\r\x1b[2Cabcde  \x1b[1A\r\x1b[3C")
+}
+
+func TestRedrawTerminalLineLegacyFallback(t *testing.T) {
+	is := is.New(t)
+	writer := new(bytes.Buffer)
+
+	redrawTerminalLine(writer, []rune("hello"), 3, 2, 5, 0, 0)
+
+	is.Equal(writer.String(), "\x1b[2Dhello\x1b[K")
+}
+
+func TestVisualPositionRightMargin(t *testing.T) {
+	is := is.New(t)
+
+	row, col := visualPosition(3, 7, 10)
+	is.Equal(row, 1)
+	is.Equal(col, 0)
+
+	row, col = visualPosition(3, 8, 10)
+	is.Equal(row, 1)
+	is.Equal(col, 1)
+}
+
+func TestRenderedPositionRightMargin(t *testing.T) {
+	is := is.New(t)
+
+	row, col := renderedPosition(3, 7, 10)
+	is.Equal(row, 0)
+	is.Equal(col, 9)
+}
+
+func TestRedrawTerminalLineWrapBoundaryCursorAdvance(t *testing.T) {
+	is := is.New(t)
+	writer := new(bytes.Buffer)
+
+	redrawTerminalLine(writer, []rune("abcd"), 3, 3, 4, 0, 4)
+
+	is.Equal(writer.String(), "\rabcd\x1b[1B\r")
+}
