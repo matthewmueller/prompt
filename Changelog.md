@@ -1,3 +1,7 @@
+# 0.1.1 / 2026-02-20
+
+- fix word wrapping
+
 # 0.1.0 / 2026-02-17
 
 - rename prompter => prompt
